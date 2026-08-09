@@ -64,6 +64,12 @@ const main = (config) => {
       "TW",
     ],
   ];
+  const informationNodePatterns = [
+    /剩余流量|已用流量|套餐到期|到期时间|过期时间|下次重置/i,
+    /官网|官址|网址|最新地址|订阅|客服|工单|邮箱|如遇问题|导航页/i,
+    /邀请|返利|倒卖|贩卖/i,
+    /\b(?:traffic|used|total|expire|email|panel)\b/i,
+  ];
   const regionDefinitions = [
     ["HK", /(香港|HK|Hong|🇭🇰)/],
     ["TW", /(台湾|TW|Taiwan)/],
@@ -320,7 +326,7 @@ const main = (config) => {
 
   const usableProxyNames = proxyNames.filter(
     (proxyName) =>
-      !/(Traffic|Expire|剩余流量|套餐到期|导航页|如遇问题)/.test(proxyName),
+      !informationNodePatterns.some((pattern) => pattern.test(proxyName)),
   );
   const automaticProxyNames = usableProxyNames.filter(
     (proxyName) => !/实验性/.test(proxyName),
