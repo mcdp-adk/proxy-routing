@@ -65,12 +65,12 @@ const main = (config) => {
     ],
   ];
   const regionDefinitions = [
-    ["HK", /^((?!实验性).)*(香港|HK|Hong|🇭🇰)((?!实验性).)*$/],
-    ["TW", /^((?!实验性).)*(台湾|TW|Taiwan)((?!实验性).)*$/],
-    ["JP", /^((?!实验性).)*(日本|JP|Japan|🇯🇵)((?!实验性).)*$/],
-    ["KR", /^((?!实验性).)*(韩国|KR|Korea|🇰🇷)((?!实验性).)*$/],
-    ["SG", /^((?!实验性).)*(新加坡|狮|獅|SG|Singapore|🇸🇬)((?!实验性).)*$/],
-    ["US", /^((?!实验性).)*(美国|US|States|American|🇺🇸)((?!实验性).)*$/],
+    ["HK", /(香港|HK|Hong|🇭🇰)/],
+    ["TW", /(台湾|TW|Taiwan)/],
+    ["JP", /(日本|JP|Japan|🇯🇵)/],
+    ["KR", /(韩国|KR|Korea|🇰🇷)/],
+    ["SG", /(新加坡|狮|獅|SG|Singapore|🇸🇬)/],
+    ["US", /(美国|US|States|American|🇺🇸)/],
   ];
   const regionLabels = new Map([
     ["HK", "🇭🇰 香港"],
@@ -318,10 +318,16 @@ const main = (config) => {
     proxyNameSet.add(proxy.name);
   }
 
+  const usableProxyNames = proxyNames.filter(
+    (proxyName) => !/(Traffic|Expire|剩余流量|套餐到期|导航页)/.test(proxyName),
+  );
+  const automaticProxyNames = usableProxyNames.filter(
+    (proxyName) => !/实验性/.test(proxyName),
+  );
   const regionProxies = new Map(
     regionDefinitions.map(([name]) => [name, []]),
   );
-  for (const proxyName of proxyNames) {
+  for (const proxyName of automaticProxyNames) {
     for (const [region, pattern] of regionDefinitions) {
       if (pattern.test(proxyName)) {
         regionProxies.get(region).push(proxyName);
@@ -336,12 +342,8 @@ const main = (config) => {
     (name) => allProjectProviderNames.has(name),
   );
 
-  const allFallbackProxies = proxyNames.filter((proxyName) =>
-    /^((?!Traffic|Expire).)*$/.test(proxyName),
-  );
-  const allAutoProxies = proxyNames.filter((proxyName) =>
-    /^((?!实验性|Traffic|Expire).)*$/.test(proxyName),
-  );
+  const allFallbackProxies = usableProxyNames;
+  const allAutoProxies = automaticProxyNames;
   if (allFallbackProxies.length === 0) {
     throw new Error("proxy-routing: ALL-FALLBACK requires at least one proxy");
   }
