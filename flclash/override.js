@@ -319,7 +319,8 @@ const main = (config) => {
   }
 
   const usableProxyNames = proxyNames.filter(
-    (proxyName) => !/(Traffic|Expire|剩余流量|套餐到期|导航页)/.test(proxyName),
+    (proxyName) =>
+      !/(Traffic|Expire|剩余流量|套餐到期|导航页|如遇问题)/.test(proxyName),
   );
   const automaticProxyNames = usableProxyNames.filter(
     (proxyName) => !/实验性/.test(proxyName),
