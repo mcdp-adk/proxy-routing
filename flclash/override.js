@@ -7,11 +7,6 @@ const main = (config) => {
       "DIRECT",
     ],
     [
-      "proxy-routing-personal-reject",
-      "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/reject.list",
-      "REJECT",
-    ],
-    [
       "proxy-routing-personal-proxy",
       "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/proxy.list",
       "PROXY",
@@ -27,26 +22,6 @@ const main = (config) => {
       "proxy-routing-acl-banad",
       "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list",
       "REJECT",
-    ],
-    [
-      "proxy-routing-acl-lan",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/LocalAreaNetwork.list",
-      "DIRECT",
-    ],
-    [
-      "proxy-routing-acl-download",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Download.list",
-      "DIRECT",
-    ],
-    [
-      "proxy-routing-acl-steamcn",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/SteamCN.list",
-      "DIRECT",
-    ],
-    [
-      "proxy-routing-acl-gamedownload",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/GameDownload.list",
-      "DIRECT",
     ],
     [
       "proxy-routing-acl-ehgallery",
@@ -86,42 +61,37 @@ const main = (config) => {
     ["SG", "🇸🇬 新加坡"],
     ["US", "🇺🇸 美国"],
   ]);
-  const makeProjectNames = (suffix) => {
+  const makeProjectNames = () => {
     const regions = new Map(
-      regionDefinitions.map(([region]) => [
-        region,
-        `${regionLabels.get(region)}${suffix}`,
-      ]),
+      regionDefinitions.map(([region]) => [region, regionLabels.get(region)]),
     );
     const regionAutos = new Map(
       regionDefinitions.map(([region]) => [
         region,
-        `${regionLabels.get(region)} · 自动${suffix}`,
+        `${regionLabels.get(region)} · 自动`,
       ]),
     );
     const regionFallbacks = new Map(
       regionDefinitions.map(([region]) => [
         region,
-        `${regionLabels.get(region)} · 故障转移${suffix}`,
+        `${regionLabels.get(region)} · 故障转移`,
       ]),
     );
     return {
-      select: `🎯 节点选择${suffix}`,
-      noncn: `🌏 非中国区${suffix}`,
-      allAuto: `🌐 全部 · 自动${suffix}`,
-      allFallback: `🌐 全部 · 故障转移${suffix}`,
+      select: "🎯 节点选择",
+      noncn: "🌏 非中国区",
+      final: "🪞 兜底策略",
+      allAuto: "🌐 全部 · 自动",
+      allFallback: "🌐 全部 · 故障转移",
       regions,
       regionAutos,
       regionFallbacks,
     };
   };
-  const projectNameModes = {
-    base: makeProjectNames(""),
-    custom: makeProjectNames("「自定义」"),
-  };
   const projectNameList = (names) => [
     names.select,
     names.noncn,
+    names.final,
     names.allAuto,
     names.allFallback,
     ...regionDefinitions.flatMap(([region]) => [
@@ -149,9 +119,6 @@ const main = (config) => {
     "gost-relay",
   ]);
   const activeDefinitions = personalRules.concat(aclRules);
-  const allProjectProviderNames = new Set(
-    activeDefinitions.map(([name]) => name),
-  );
   const builtinOutboundNames = new Set([
     "DIRECT",
     "REJECT",
@@ -179,44 +146,6 @@ const main = (config) => {
       typeof constructor === "function" &&
       Function.prototype.toString.call(constructor) ===
         Function.prototype.toString.call(Object)
-    );
-  };
-  const sameValue = (left, right) => {
-    if (left === right) {
-      return true;
-    }
-    if (Array.isArray(left) || Array.isArray(right)) {
-      return (
-        Array.isArray(left) &&
-        Array.isArray(right) &&
-        left.length === right.length &&
-        left.every((value, index) => sameValue(value, right[index]))
-      );
-    }
-    if (isPlainObject(left) || isPlainObject(right)) {
-      if (!isPlainObject(left) || !isPlainObject(right)) {
-        return false;
-      }
-      const leftKeys = Object.keys(left);
-      const rightKeys = Object.keys(right);
-      return (
-        leftKeys.length === rightKeys.length &&
-        leftKeys.every(
-          (key) => hasOwn(right, key) && sameValue(left[key], right[key]),
-        )
-      );
-    }
-    return false;
-  };
-  const isProjectRule = (rule) => {
-    if (typeof rule !== "string") {
-      return false;
-    }
-    const parts = rule.split(",");
-    return (
-      parts[0] === "RULE-SET" &&
-      typeof parts[1] === "string" &&
-      allProjectProviderNames.has(parts[1])
     );
   };
 
@@ -345,9 +274,6 @@ const main = (config) => {
     name,
     proxies: regionProxies.get(name),
   }));
-  const installedProjectProviders = Object.keys(existingRuleProviders).filter(
-    (name) => allProjectProviderNames.has(name),
-  );
 
   const allFallbackProxies = usableProxyNames;
   const allAutoProxies = automaticProxyNames;
@@ -357,62 +283,16 @@ const main = (config) => {
   if (allAutoProxies.length === 0) {
     throw new Error("proxy-routing: ALL-AUTO requires at least one proxy");
   }
-  const providerNamesMatch =
-    installedProjectProviders.length === allProjectProviderNames.size;
-  const hasProjectState =
-    installedProjectProviders.length > 0 || rulesBase.some(isProjectRule);
-  let mode;
-  if (!hasProjectState) {
-    const conflictsWith = (names) =>
-      projectNameList(names).filter(
-        (name) =>
-          airportGroupNames.has(name) ||
-          proxyNameSet.has(name) ||
-          builtinOutboundNames.has(name),
-      );
-    const baseConflicts = conflictsWith(projectNameModes.base);
-    if (baseConflicts.length === 0) {
-      mode = "base";
-    } else if (conflictsWith(projectNameModes.custom).length === 0) {
-      mode = "custom";
-    } else {
-      throw new Error(
-        "proxy-routing: conflict; both base and custom project name families are occupied",
-      );
-    }
-  } else {
-    if (!providerNamesMatch) {
-      throw new Error(
-        "proxy-routing: conflict; project provider marker is partial, stale, or inconsistent",
-      );
-    }
-    const providerTargets = activeDefinitions.map(([name]) => {
-      const provider = existingRuleProviders[name];
-      return isPlainObject(provider) && hasOwn(provider, "proxy")
-        ? provider.proxy
-        : null;
-    });
-    const commonProviderTarget = providerTargets[0];
-    if (
-      typeof commonProviderTarget !== "string" ||
-      !providerTargets.every((target) => target === commonProviderTarget)
-    ) {
-      throw new Error(
-        "proxy-routing: conflict; project provider download proxy targets are mixed or unknown",
-      );
-    }
-    if (commonProviderTarget === projectNameModes.base.select) {
-      mode = "base";
-    } else if (commonProviderTarget === projectNameModes.custom.select) {
-      mode = "custom";
-    } else {
-      throw new Error(
-        "proxy-routing: conflict; project provider download proxy target is not a supported node selection group",
-      );
-    }
-  }
-  const projectNames = projectNameModes[mode];
+  const projectNames = makeProjectNames();
   const projectGroupNames = new Set(projectNameList(projectNames));
+  const occupiedProjectNames = [...projectGroupNames].filter(
+    (name) => proxyNameSet.has(name) || builtinOutboundNames.has(name),
+  );
+  if (occupiedProjectNames.length > 0) {
+    throw new Error(
+      `proxy-routing: conflict; reserved group name is occupied: ${occupiedProjectNames[0]}`,
+    );
+  }
   const expectedProviderEntries = new Map(
     activeDefinitions.map(([name, url]) => [
       name,
@@ -431,10 +311,19 @@ const main = (config) => {
     NONCN: projectNames.noncn,
     TW: projectNames.regions.get("TW"),
   };
-  const expectedProjectRules = activeDefinitions.map(
-    ([name, , policy]) =>
-      `RULE-SET,${name},${policyTargets[policy] || policy}`,
-  );
+  const expectedProjectRules = activeDefinitions
+    .map(
+      ([name, , policy]) =>
+        `RULE-SET,${name},${policyTargets[policy] || policy}`,
+    )
+    .concat([
+      "GEOSITE,private,DIRECT",
+      "GEOIP,private,DIRECT,no-resolve",
+      `GEOSITE,gfw,${projectNames.select}`,
+      "GEOSITE,cn,DIRECT",
+      "GEOIP,CN,DIRECT,no-resolve",
+      `MATCH,${projectNames.final}`,
+    ]);
   const visibleGroups = [
     {
       name: projectNames.select,
@@ -451,6 +340,11 @@ const main = (config) => {
       proxies: ["JP", "KR", "SG", "US"].map((region) =>
         projectNames.regions.get(region),
       ),
+    },
+    {
+      name: projectNames.final,
+      type: "select",
+      proxies: [projectNames.select, "DIRECT"],
     },
     ...regions.map(({ name, proxies }) => ({
       name: projectNames.regions.get(name),
@@ -508,72 +402,20 @@ const main = (config) => {
     throw new Error("proxy-routing: generated project group names are not unique");
   }
 
-  const providerStructuresMatch =
-    providerNamesMatch &&
-    activeDefinitions.every(([name]) =>
-      sameValue(existingRuleProviders[name], expectedProviderEntries.get(name)),
-    );
-  const projectGroupsHaveLayout =
-    projectGroupsBase.length >= expectedProjectGroups.length;
-  const airportGroupEnd = projectGroupsBase.length - hiddenGroups.length;
-  const projectGroupsMatch =
-    projectGroupsHaveLayout &&
-    visibleGroups.every((group, index) =>
-      sameValue(projectGroupsBase[index], group),
-    ) &&
-    hiddenGroups.every((group, index) =>
-      sameValue(projectGroupsBase[airportGroupEnd + index], group),
-    ) &&
-    projectGroupsBase
-      .slice(visibleGroups.length, airportGroupEnd)
-      .every((group) => !projectGroupNames.has(group.name));
-  const projectRulesMatch =
-    rulesBase.length >= expectedProjectRules.length &&
-    expectedProjectRules.every(
-      (rule, index) => rulesBase[index] === rule,
-    ) &&
-    rulesBase
-      .slice(expectedProjectRules.length)
-      .every((rule) => !isProjectRule(rule));
-  if (hasProjectState) {
-    if (!providerStructuresMatch) {
-      throw new Error(
-        "proxy-routing: conflict; project provider structure is inconsistent",
-      );
-    }
-    if (!projectGroupsMatch) {
-      throw new Error(
-        "proxy-routing: conflict; project proxy groups are missing, extra, or structurally inconsistent",
-      );
-    }
-    if (!projectRulesMatch) {
-      throw new Error(
-        "proxy-routing: conflict; project RULE-SET rules are missing, extra, or structurally inconsistent",
-      );
-    }
-  }
-
-  const airportRules = hasProjectState
-    ? rulesBase.slice(expectedProjectRules.length)
-    : rulesBase;
-  const nextRules = expectedProjectRules.concat(airportRules);
   const nextRuleProviders = Object.create(null);
   for (const [name, provider] of Object.entries(existingRuleProviders)) {
-    if (!allProjectProviderNames.has(name)) {
-      nextRuleProviders[name] = provider;
+    if (name.startsWith("proxy-routing-")) {
+      continue;
     }
+    nextRuleProviders[name] = provider;
   }
   for (const [name, provider] of expectedProviderEntries) {
     nextRuleProviders[name] = provider;
   }
-  const retainedGroups = hasProjectState
-    ? projectGroupsBase.slice(visibleGroups.length, airportGroupEnd)
-    : projectGroupsBase;
-  const nextProxyGroups = visibleGroups.concat(retainedGroups, hiddenGroups);
 
-  config.rules = nextRules;
+  config.rules = expectedProjectRules;
   config["rule-providers"] = nextRuleProviders;
-  config["proxy-groups"] = nextProxyGroups;
+  config["proxy-groups"] = expectedProjectGroups;
 
   return config;
 };
