@@ -1,7 +1,0 @@
-{
-  "name": "proxy-routing",
-  "private": true,
-  "scripts": {
-    "test": "node --test ./test/override.e2e.test.js"
-  }
-}
