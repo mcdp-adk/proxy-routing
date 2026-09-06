@@ -16,6 +16,11 @@ const main = (config) => {
       "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/noncn.list",
       "NONCN",
     ],
+    [
+      "proxy-routing-personal-jp",
+      "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/jp.list",
+      "JP",
+    ],
   ];
   const aclRules = [
     [
@@ -37,6 +42,11 @@ const main = (config) => {
       "proxy-routing-acl-bahamut",
       "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bahamut.list",
       "TW",
+    ],
+    [
+      "proxy-routing-acl-dmm",
+      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Dmm.list",
+      "JP",
     ],
   ];
   const informationNodePatterns = [
@@ -310,6 +320,7 @@ const main = (config) => {
     PROXY: projectNames.select,
     NONCN: projectNames.noncn,
     TW: projectNames.regions.get("TW"),
+    JP: projectNames.regions.get("JP"),
   };
   const expectedProjectRules = activeDefinitions
     .map(
