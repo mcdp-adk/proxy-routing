@@ -1,53 +1,28 @@
 const main = (config) => {
   const healthCheckUrl = "https://www.gstatic.com/generate_204";
-  const personalRules = [
-    [
-      "proxy-routing-personal-direct",
-      "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/direct.list",
-      "DIRECT",
-    ],
-    [
-      "proxy-routing-personal-proxy",
-      "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/proxy.list",
-      "PROXY",
-    ],
-    [
-      "proxy-routing-personal-noncn",
-      "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/noncn.list",
-      "NONCN",
-    ],
-    [
-      "proxy-routing-personal-jp",
-      "https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/jp.list",
-      "JP",
-    ],
+  const repoList = (name) =>
+    `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/${name}.list`;
+  const aclList = (name) =>
+    `https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/${name}.list`;
+  // Matched in order. A policy is DIRECT, REJECT, PROXY, NONCN or a region code.
+  const ruleSets = [
+    ["proxy-routing-personal-direct", repoList("direct"), "DIRECT"],
+    ["proxy-routing-personal-proxy", repoList("proxy"), "PROXY"],
+    ["proxy-routing-personal-noncn", repoList("noncn"), "NONCN"],
+    ["proxy-routing-personal-jp", repoList("jp"), "JP"],
+    ["proxy-routing-acl-banad", aclList("BanAD"), "REJECT"],
+    ["proxy-routing-acl-ehgallery", aclList("Ruleset/EHGallery"), "NONCN"],
+    ["proxy-routing-acl-ai", aclList("Ruleset/AI"), "NONCN"],
+    ["proxy-routing-acl-bahamut", aclList("Ruleset/Bahamut"), "TW"],
+    ["proxy-routing-acl-dmm", aclList("Ruleset/Dmm"), "JP"],
   ];
-  const aclRules = [
-    [
-      "proxy-routing-acl-banad",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list",
-      "REJECT",
-    ],
-    [
-      "proxy-routing-acl-ehgallery",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/EHGallery.list",
-      "NONCN",
-    ],
-    [
-      "proxy-routing-acl-ai",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/AI.list",
-      "NONCN",
-    ],
-    [
-      "proxy-routing-acl-bahamut",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Bahamut.list",
-      "TW",
-    ],
-    [
-      "proxy-routing-acl-dmm",
-      "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Dmm.list",
-      "JP",
-    ],
+  const regions = [
+    { code: "HK", label: "🇭🇰 香港", pattern: /(香港|HK|Hong|🇭🇰)/, tolerance: 50 },
+    { code: "TW", label: "🇹🇼 台湾", pattern: /(台湾|TW|Taiwan)/, tolerance: 50 },
+    { code: "JP", label: "🇯🇵 日本", pattern: /(日本|JP|Japan|🇯🇵)/, tolerance: 50, noncn: true },
+    { code: "KR", label: "🇰🇷 韩国", pattern: /(韩国|KR|Korea|🇰🇷)/, tolerance: 50, noncn: true },
+    { code: "SG", label: "🇸🇬 新加坡", pattern: /(新加坡|狮|獅|SG|Singapore|🇸🇬)/, tolerance: 50, noncn: true },
+    { code: "US", label: "🇺🇸 美国", pattern: /(美国|US|States|American|🇺🇸)/, tolerance: 150, noncn: true },
   ];
   const informationNodePatterns = [
     /剩余流量|已用流量|套餐到期|到期时间|过期时间|下次重置/i,
@@ -55,359 +30,170 @@ const main = (config) => {
     /邀请|返利|倒卖|贩卖/i,
     /\b(?:traffic|used|total|expire|email|panel)\b/i,
   ];
-  const regionDefinitions = [
-    ["HK", /(香港|HK|Hong|🇭🇰)/],
-    ["TW", /(台湾|TW|Taiwan)/],
-    ["JP", /(日本|JP|Japan|🇯🇵)/],
-    ["KR", /(韩国|KR|Korea|🇰🇷)/],
-    ["SG", /(新加坡|狮|獅|SG|Singapore|🇸🇬)/],
-    ["US", /(美国|US|States|American|🇺🇸)/],
-  ];
-  const regionLabels = new Map([
-    ["HK", "🇭🇰 香港"],
-    ["TW", "🇹🇼 台湾"],
-    ["JP", "🇯🇵 日本"],
-    ["KR", "🇰🇷 韩国"],
-    ["SG", "🇸🇬 新加坡"],
-    ["US", "🇺🇸 美国"],
-  ]);
-  const makeProjectNames = () => {
-    const regions = new Map(
-      regionDefinitions.map(([region]) => [region, regionLabels.get(region)]),
-    );
-    const regionAutos = new Map(
-      regionDefinitions.map(([region]) => [
-        region,
-        `${regionLabels.get(region)} · 自动`,
-      ]),
-    );
-    const regionFallbacks = new Map(
-      regionDefinitions.map(([region]) => [
-        region,
-        `${regionLabels.get(region)} · 故障转移`,
-      ]),
-    );
-    return {
-      select: "🎯 节点选择",
-      noncn: "🌏 非中国区",
-      final: "🪞 兜底策略",
-      allAuto: "🌐 全部 · 自动",
-      allFallback: "🌐 全部 · 故障转移",
-      regions,
-      regionAutos,
-      regionFallbacks,
-    };
+  const groupNames = {
+    select: "🎯 节点选择",
+    noncn: "🌏 非中国区",
+    final: "🪞 兜底策略",
+    allAuto: "🌐 全部 · 自动",
+    allFallback: "🌐 全部 · 故障转移",
   };
-  const projectNameList = (names) => [
-    names.select,
-    names.noncn,
-    names.final,
-    names.allAuto,
-    names.allFallback,
-    ...regionDefinitions.flatMap(([region]) => [
-      names.regions.get(region),
-      names.regionAutos.get(region),
-      names.regionFallbacks.get(region),
-    ]),
-  ];
-  const supportedProxyTypes = new Set([
-    "ss",
-    "ssr",
-    "socks5",
-    "http",
-    "snell",
-    "vmess",
-    "vless",
-    "trojan",
-    "hysteria",
-    "hysteria2",
-    "wireguard",
-    "tuic",
-    "ssh",
-    "mieru",
-    "anytls",
-    "gost-relay",
-  ]);
-  const activeDefinitions = personalRules.concat(aclRules);
-  const builtinOutboundNames = new Set([
-    "DIRECT",
-    "REJECT",
-    "REJECT-DROP",
-    "COMPATIBLE",
-    "PASS",
-    "PASS-RULE",
-    "DNS",
-  ]);
-  const hasOwn = (object, property) =>
-    Object.prototype.hasOwnProperty.call(object, property);
-  const isPlainObject = (value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) {
-      return false;
-    }
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype === null) {
-      return true;
-    }
-    const constructor = hasOwn(prototype, "constructor")
-      ? prototype.constructor
-      : null;
-    return (
-      Object.prototype.toString.call(value) === "[object Object]" &&
-      typeof constructor === "function" &&
-      Function.prototype.toString.call(constructor) ===
-        Function.prototype.toString.call(Object)
-    );
-  };
+  const autoName = (label) => `${label} · 自动`;
+  const fallbackName = (label) => `${label} · 故障转移`;
+  const isObject = (value) =>
+    value !== null && typeof value === "object" && !Array.isArray(value);
 
-  if (!config || typeof config !== "object" || Array.isArray(config)) {
+  if (!isObject(config)) {
     throw new Error("proxy-routing: config is required");
   }
-
-  if (!hasOwn(config, "proxies")) {
-    if (hasOwn(config, "proxy-providers")) {
+  if (!Array.isArray(config.proxies) || config.proxies.length === 0) {
+    if (
+      isObject(config["proxy-providers"]) &&
+      Object.keys(config["proxy-providers"]).length > 0
+    ) {
       throw new Error(
         "proxy-routing: config.proxies is required; this override only supports inline proxies, not proxy-providers",
       );
     }
     throw new Error("proxy-routing: config.proxies must be a non-empty array");
   }
-  if (!Array.isArray(config.proxies) || config.proxies.length === 0) {
-    throw new Error("proxy-routing: config.proxies must be a non-empty array");
-  }
-
-  const rulesBase = hasOwn(config, "rules") ? config.rules : [];
-  if (!Array.isArray(rulesBase)) {
-    throw new Error("proxy-routing: config.rules must be an array");
-  }
-  const projectGroupsBase = hasOwn(config, "proxy-groups")
-    ? config["proxy-groups"]
-    : [];
-  if (!Array.isArray(projectGroupsBase)) {
-    throw new Error("proxy-routing: config.proxy-groups must be an array");
-  }
-  const airportGroupNames = new Set();
-  for (let index = 0; index < projectGroupsBase.length; index += 1) {
-    const group = projectGroupsBase[index];
-    if (!isPlainObject(group)) {
-      throw new Error(
-        `proxy-routing: config.proxy-groups[${index}] must be a plain object`,
-      );
-    }
-    if (
-      !hasOwn(group, "name") ||
-      typeof group.name !== "string" ||
-      group.name.trim().length === 0
-    ) {
-      throw new Error(
-        `proxy-routing: config.proxy-groups[${index}].name must be a non-empty string`,
-      );
-    }
-    if (builtinOutboundNames.has(group.name)) {
-      throw new Error(
-        `proxy-routing: proxy group name conflicts with a built-in outbound: ${group.name}`,
-      );
-    }
-    if (airportGroupNames.has(group.name)) {
-      throw new Error(
-        `proxy-routing: duplicate proxy group name is not allowed: ${group.name}`,
-      );
-    }
-    airportGroupNames.add(group.name);
-  }
-  const existingRuleProviders =
-    hasOwn(config, "rule-providers") && config["rule-providers"] !== null
-      ? config["rule-providers"]
-      : {};
-  if (!isPlainObject(existingRuleProviders)) {
+  const existingRuleProviders = config["rule-providers"] ?? {};
+  if (!isObject(existingRuleProviders)) {
     throw new Error("proxy-routing: config.rule-providers must be an object");
   }
-
-  const proxyNames = [];
-  const proxyNameSet = new Set();
-  for (let index = 0; index < config.proxies.length; index += 1) {
-    const proxy = config.proxies[index];
-    if (!isPlainObject(proxy)) {
-      throw new Error(
-        `proxy-routing: config.proxies[${index}] must be a plain object`,
-      );
-    }
-    if (typeof proxy.name !== "string" || proxy.name.trim().length === 0) {
+  config.proxies.forEach((proxy, index) => {
+    if (
+      !isObject(proxy) ||
+      typeof proxy.name !== "string" ||
+      proxy.name.trim().length === 0
+    ) {
       throw new Error(
         `proxy-routing: config.proxies[${index}].name must be a non-empty string`,
       );
     }
-    if (proxyNameSet.has(proxy.name)) {
-      throw new Error(
-        `proxy-routing: duplicate proxy name is not allowed: ${proxy.name}`,
-      );
-    }
-    if (typeof proxy.type !== "string" || proxy.type.trim().length === 0) {
-      throw new Error(
-        `proxy-routing: config.proxies[${index}].type must be a non-empty string`,
-      );
-    }
-    if (!supportedProxyTypes.has(proxy.type)) {
-      throw new Error(
-        `proxy-routing: unsupported proxy type: ${proxy.type}`,
-      );
-    }
-    if (
-      builtinOutboundNames.has(proxy.name) ||
-      airportGroupNames.has(proxy.name)
-    ) {
-      throw new Error(
-        `proxy-routing: proxy name conflicts with a reserved group or reference name: ${proxy.name}`,
-      );
-    }
-    proxyNames.push(proxy.name);
-    proxyNameSet.add(proxy.name);
-  }
+  });
 
-  const usableProxyNames = proxyNames.filter(
-    (proxyName) =>
-      !informationNodePatterns.some((pattern) => pattern.test(proxyName)),
-  );
+  const usableProxyNames = config.proxies
+    .map(({ name }) => name)
+    .filter(
+      (name) => !informationNodePatterns.some((pattern) => pattern.test(name)),
+    );
   const automaticProxyNames = usableProxyNames.filter(
-    (proxyName) => !/实验性/.test(proxyName),
+    (name) => !/实验性/.test(name),
   );
-  const regionProxies = new Map(
-    regionDefinitions.map(([name]) => [name, []]),
-  );
-  for (const proxyName of automaticProxyNames) {
-    for (const [region, pattern] of regionDefinitions) {
-      if (pattern.test(proxyName)) {
-        regionProxies.get(region).push(proxyName);
-      }
-    }
-  }
-  const regions = regionDefinitions
-    .map(([name]) => ({ name, proxies: regionProxies.get(name) }))
-    .filter(({ proxies }) => proxies.length > 0);
-  const availableRegions = new Set(regions.map(({ name }) => name));
-  const noncnRegions = ["JP", "KR", "SG", "US"].filter((region) =>
-    availableRegions.has(region),
-  );
-  const regionTarget = (region) =>
-    availableRegions.has(region)
-      ? projectNames.regions.get(region)
-      : projectNames.select;
-
-  const allFallbackProxies = usableProxyNames;
-  const allAutoProxies = automaticProxyNames;
-  if (allFallbackProxies.length === 0) {
-    throw new Error("proxy-routing: ALL-FALLBACK requires at least one proxy");
-  }
-  if (allAutoProxies.length === 0) {
-    throw new Error("proxy-routing: ALL-AUTO requires at least one proxy");
-  }
-  const projectNames = makeProjectNames();
-  const projectGroupNames = new Set(projectNameList(projectNames));
-  const occupiedProjectNames = [...projectGroupNames].filter(
-    (name) => proxyNameSet.has(name) || builtinOutboundNames.has(name),
-  );
-  if (occupiedProjectNames.length > 0) {
+  if (automaticProxyNames.length === 0) {
     throw new Error(
-      `proxy-routing: conflict; reserved group name is occupied: ${occupiedProjectNames[0]}`,
+      "proxy-routing: no proxy is left after removing information and experimental nodes",
     );
   }
-  const expectedProviderEntries = new Map(
-    activeDefinitions.map(([name, url]) => [
-      name,
-      {
-        type: "http",
-        behavior: "classical",
-        format: "text",
-        interval: 86400,
-        proxy: projectNames.select,
-        url,
-      },
-    ]),
-  );
-  const policyTargets = {
-    PROXY: projectNames.select,
-    NONCN: noncnRegions.length > 0 ? projectNames.noncn : projectNames.select,
-    TW: regionTarget("TW"),
-    JP: regionTarget("JP"),
+  const populatedRegions = regions
+    .map((region) => ({
+      ...region,
+      proxies: automaticProxyNames.filter((name) => region.pattern.test(name)),
+    }))
+    .filter(({ proxies }) => proxies.length > 0);
+  const noncnRegions = populatedRegions.filter(({ noncn }) => noncn);
+
+  // Rules aimed at a group that has no nodes fall back to 🎯 节点选择.
+  const policyTargets = new Map([
+    ["DIRECT", "DIRECT"],
+    ["REJECT", "REJECT"],
+    ["PROXY", groupNames.select],
+    ["NONCN", noncnRegions.length > 0 ? groupNames.noncn : groupNames.select],
+    ...regions.map(({ code }) => [code, groupNames.select]),
+    ...populatedRegions.map(({ code, label }) => [code, label]),
+  ]);
+  const policyTarget = (policy) => {
+    if (!policyTargets.has(policy)) {
+      throw new Error(`proxy-routing: unknown rule-set policy: ${policy}`);
+    }
+    return policyTargets.get(policy);
   };
-  const expectedProjectRules = activeDefinitions
-    .map(
-      ([name, , policy]) =>
-        `RULE-SET,${name},${policyTargets[policy] || policy}`,
-    )
+
+  config.rules = ruleSets
+    .map(([name, , policy]) => `RULE-SET,${name},${policyTarget(policy)}`)
     .concat([
       "GEOSITE,private,DIRECT",
       "GEOIP,private,DIRECT,no-resolve",
-      `GEOSITE,gfw,${projectNames.select}`,
+      `GEOSITE,gfw,${groupNames.select}`,
       "GEOSITE,cn,DIRECT",
       "GEOIP,CN,DIRECT,no-resolve",
-      `MATCH,${projectNames.final}`,
+      `MATCH,${groupNames.final}`,
     ]);
-  const visibleGroups = [
+  config["rule-providers"] = Object.fromEntries(
+    Object.entries(existingRuleProviders)
+      .filter(([name]) => !name.startsWith("proxy-routing-"))
+      .concat(
+        ruleSets.map(([name, url]) => [
+          name,
+          {
+            type: "http",
+            behavior: "classical",
+            format: "text",
+            interval: 86400,
+            proxy: groupNames.select,
+            url,
+          },
+        ]),
+      ),
+  );
+  config["proxy-groups"] = [
     {
-      name: projectNames.select,
+      name: groupNames.select,
       type: "select",
       proxies: [
-        projectNames.allAuto,
-        projectNames.allFallback,
-        ...regions.map(({ name }) => projectNames.regions.get(name)),
+        groupNames.allAuto,
+        groupNames.allFallback,
+        ...populatedRegions.map(({ label }) => label),
       ],
     },
     ...(noncnRegions.length > 0
       ? [
           {
-            name: projectNames.noncn,
+            name: groupNames.noncn,
             type: "select",
-            proxies: noncnRegions.map((region) =>
-              projectNames.regions.get(region),
-            ),
+            proxies: noncnRegions.map(({ label }) => label),
           },
         ]
       : []),
     {
-      name: projectNames.final,
+      name: groupNames.final,
       type: "select",
-      proxies: [projectNames.select, "DIRECT"],
+      proxies: [groupNames.select, "DIRECT"],
     },
-    ...regions.map(({ name, proxies }) => ({
-      name: projectNames.regions.get(name),
+    ...populatedRegions.map(({ label, proxies }) => ({
+      name: label,
       type: "select",
-      proxies: [
-        projectNames.regionAutos.get(name),
-        projectNames.regionFallbacks.get(name),
-        ...proxies,
-      ],
+      proxies: [autoName(label), fallbackName(label), ...proxies],
     })),
-  ];
-  const hiddenGroups = [
     {
-      name: projectNames.allAuto,
+      name: groupNames.allAuto,
       type: "url-test",
-      proxies: allAutoProxies,
+      proxies: automaticProxyNames,
       url: healthCheckUrl,
       interval: 300,
       tolerance: 50,
       hidden: true,
     },
     {
-      name: projectNames.allFallback,
+      name: groupNames.allFallback,
       type: "fallback",
-      proxies: allFallbackProxies,
+      proxies: usableProxyNames,
       url: healthCheckUrl,
       interval: 180,
       hidden: true,
     },
-    ...regions.flatMap(({ name, proxies }) => [
+    ...populatedRegions.flatMap(({ label, proxies, tolerance }) => [
       {
-        name: projectNames.regionAutos.get(name),
+        name: autoName(label),
         type: "url-test",
         proxies,
         url: healthCheckUrl,
         interval: 300,
-        tolerance: name === "US" ? 150 : 50,
+        tolerance,
         hidden: true,
       },
       {
-        name: projectNames.regionFallbacks.get(name),
+        name: fallbackName(label),
         type: "fallback",
         proxies,
         url: healthCheckUrl,
@@ -416,28 +202,6 @@ const main = (config) => {
       },
     ]),
   ];
-  const expectedProjectGroups = visibleGroups.concat(hiddenGroups);
-  const expectedProjectGroupNames = new Set(
-    expectedProjectGroups.map(({ name }) => name),
-  );
-  if (expectedProjectGroupNames.size !== expectedProjectGroups.length) {
-    throw new Error("proxy-routing: generated project group names are not unique");
-  }
-
-  const nextRuleProviders = Object.create(null);
-  for (const [name, provider] of Object.entries(existingRuleProviders)) {
-    if (name.startsWith("proxy-routing-")) {
-      continue;
-    }
-    nextRuleProviders[name] = provider;
-  }
-  for (const [name, provider] of expectedProviderEntries) {
-    nextRuleProviders[name] = provider;
-  }
-
-  config.rules = expectedProjectRules;
-  config["rule-providers"] = nextRuleProviders;
-  config["proxy-groups"] = expectedProjectGroups;
 
   return config;
 };
