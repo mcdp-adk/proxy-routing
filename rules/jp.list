@@ -1,3 +1,11 @@
 # Locked to Japan.
+
+# DMM
 GEOSITE,dmm
 DOMAIN-SUFFIX,fanza.jp
+
+# DLsite and the sites sharing its login, payment or media
+GEOSITE,dlsite
+DOMAIN-SUFFIX,comipo.app
+DOMAIN-SUFFIX,vivion.jp
+DOMAIN-SUFFIX,vivion-bcs.com
