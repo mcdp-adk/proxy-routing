@@ -280,10 +280,17 @@ const main = (config) => {
       }
     }
   }
-  const regions = regionDefinitions.map(([name]) => ({
-    name,
-    proxies: regionProxies.get(name),
-  }));
+  const regions = regionDefinitions
+    .map(([name]) => ({ name, proxies: regionProxies.get(name) }))
+    .filter(({ proxies }) => proxies.length > 0);
+  const availableRegions = new Set(regions.map(({ name }) => name));
+  const noncnRegions = ["JP", "KR", "SG", "US"].filter((region) =>
+    availableRegions.has(region),
+  );
+  const regionTarget = (region) =>
+    availableRegions.has(region)
+      ? projectNames.regions.get(region)
+      : projectNames.select;
 
   const allFallbackProxies = usableProxyNames;
   const allAutoProxies = automaticProxyNames;
@@ -318,9 +325,9 @@ const main = (config) => {
   );
   const policyTargets = {
     PROXY: projectNames.select,
-    NONCN: projectNames.noncn,
-    TW: projectNames.regions.get("TW"),
-    JP: projectNames.regions.get("JP"),
+    NONCN: noncnRegions.length > 0 ? projectNames.noncn : projectNames.select,
+    TW: regionTarget("TW"),
+    JP: regionTarget("JP"),
   };
   const expectedProjectRules = activeDefinitions
     .map(
@@ -342,16 +349,20 @@ const main = (config) => {
       proxies: [
         projectNames.allAuto,
         projectNames.allFallback,
-        ...regionDefinitions.map(([region]) => projectNames.regions.get(region)),
+        ...regions.map(({ name }) => projectNames.regions.get(name)),
       ],
     },
-    {
-      name: projectNames.noncn,
-      type: "select",
-      proxies: ["JP", "KR", "SG", "US"].map((region) =>
-        projectNames.regions.get(region),
-      ),
-    },
+    ...(noncnRegions.length > 0
+      ? [
+          {
+            name: projectNames.noncn,
+            type: "select",
+            proxies: noncnRegions.map((region) =>
+              projectNames.regions.get(region),
+            ),
+          },
+        ]
+      : []),
     {
       name: projectNames.final,
       type: "select",
