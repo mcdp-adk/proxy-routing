@@ -2,6 +2,12 @@
 
 # AI
 GEOSITE,category-ai-!cn
+# Missing from the category: Meta, opencode, Bing chat
+DOMAIN-SUFFIX,llama.com
+DOMAIN-SUFFIX,meta.com
+DOMAIN-SUFFIX,models.dev
+DOMAIN-SUFFIX,opncd.ai
+DOMAIN-SUFFIX,sydney.bing.com
 
 # E-Hentai
 GEOSITE,ehentai
