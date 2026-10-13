@@ -1,21 +1,17 @@
 const main = (config) => {
   const healthCheckUrl = "https://www.gstatic.com/generate_204";
-  const repoList = (name) =>
-    `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/${name}.list`;
-  const aclList = (name) =>
-    `https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/${name}.list`;
-  // Matched in order. A policy is DIRECT, REJECT, PROXY, NONCN or a region code.
+  // One list per exit under rules/, matched in order: direct first so it can
+  // override everything, then the stricter an exit, the earlier its list.
+  // A policy is DIRECT, REJECT, PROXY, NONCN or a region code.
   const ruleSets = [
-    ["proxy-routing-personal-direct", repoList("direct"), "DIRECT"],
-    ["proxy-routing-personal-proxy", repoList("proxy"), "PROXY"],
-    ["proxy-routing-personal-noncn", repoList("noncn"), "NONCN"],
-    ["proxy-routing-personal-jp", repoList("jp"), "JP"],
-    ["proxy-routing-acl-banad", aclList("BanAD"), "REJECT"],
-    ["proxy-routing-acl-ehgallery", aclList("Ruleset/EHGallery"), "NONCN"],
-    ["proxy-routing-acl-ai", aclList("Ruleset/AI"), "NONCN"],
-    ["proxy-routing-acl-bahamut", aclList("Ruleset/Bahamut"), "TW"],
-    ["proxy-routing-acl-dmm", aclList("Ruleset/Dmm"), "JP"],
+    ["direct", "DIRECT"],
+    ["reject", "REJECT"],
+    ["tw", "TW"],
+    ["jp", "JP"],
+    ["noncn", "NONCN"],
+    ["proxy", "PROXY"],
   ];
+  const ruleSetName = (list) => `proxy-routing-${list}`;
   const regions = [
     { code: "HK", label: "🇭🇰 香港", pattern: /(香港|HK|Hong|🇭🇰)/, tolerance: 50 },
     { code: "TW", label: "🇹🇼 台湾", pattern: /(台湾|TW|Taiwan)/, tolerance: 50 },
@@ -110,7 +106,10 @@ const main = (config) => {
   };
 
   config.rules = ruleSets
-    .map(([name, , policy]) => `RULE-SET,${name},${policyTarget(policy)}`)
+    .map(
+      ([list, policy]) =>
+        `RULE-SET,${ruleSetName(list)},${policyTarget(policy)}`,
+    )
     .concat([
       "GEOSITE,private,DIRECT",
       "GEOIP,private,DIRECT,no-resolve",
@@ -123,15 +122,15 @@ const main = (config) => {
     Object.entries(existingRuleProviders)
       .filter(([name]) => !name.startsWith("proxy-routing-"))
       .concat(
-        ruleSets.map(([name, url]) => [
-          name,
+        ruleSets.map(([list]) => [
+          ruleSetName(list),
           {
             type: "http",
             behavior: "classical",
             format: "text",
             interval: 86400,
             proxy: groupNames.select,
-            url,
+            url: `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/${list}.list`,
           },
         ]),
       ),

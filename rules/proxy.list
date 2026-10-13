@@ -1,3 +1,4 @@
-DOMAIN-SUFFIX,bing.com
-DOMAIN-KEYWORD,notion
-DOMAIN-KEYWORD,pikpak
+# Proxied through any region.
+GEOSITE,bing
+GEOSITE,notion
+GEOSITE,pikpak
