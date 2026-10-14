@@ -1,2 +1,10 @@
 # Connected directly.
-DOMAIN-SUFFIX,steamserver.net
+
+# Apple
+GEOSITE,apple-cn
+
+# Game downloads
+GEOSITE,category-game-platforms-download
+
+# Steam
+GEOSITE,steam@cn
