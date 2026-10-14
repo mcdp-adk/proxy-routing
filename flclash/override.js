@@ -13,12 +13,14 @@ const main = (config) => {
   ];
   const ruleSetName = (list) => `proxy-routing-${list}`;
   const regions = [
-    { code: "HK", label: "🇭🇰 香港", pattern: /(香港|HK|Hong|🇭🇰)/, tolerance: 50 },
-    { code: "TW", label: "🇹🇼 台湾", pattern: /(台湾|TW|Taiwan)/, tolerance: 50 },
-    { code: "JP", label: "🇯🇵 日本", pattern: /(日本|JP|Japan|🇯🇵)/, tolerance: 50, noncn: true },
-    { code: "KR", label: "🇰🇷 韩国", pattern: /(韩国|KR|Korea|🇰🇷)/, tolerance: 50, noncn: true },
-    { code: "SG", label: "🇸🇬 新加坡", pattern: /(新加坡|狮|獅|SG|Singapore|🇸🇬)/, tolerance: 50, noncn: true },
-    { code: "US", label: "🇺🇸 美国", pattern: /(美国|US|States|American|🇺🇸)/, tolerance: 150, noncn: true },
+    // Patterns follow the owner's Loon filters. JS's \b treats CJK as non-word
+    // characters, so a code glued to Chinese text (中转HK1) matches here only.
+    { code: "HK", label: "🇭🇰 香港", pattern: /🇭🇰|香港|\b(?:HK|Hong)\d*\b/i, tolerance: 50 },
+    { code: "TW", label: "🇹🇼 台湾", pattern: /🇹🇼|台湾|\b(?:TW|Tai|Taiwan)\d*\b/i, tolerance: 50 },
+    { code: "JP", label: "🇯🇵 日本", pattern: /🇯🇵|日本|川日|东京|大阪|泉日|埼玉|\b(?:JP|Japan)\d*\b/i, tolerance: 50, noncn: true },
+    { code: "KR", label: "🇰🇷 韩国", pattern: /🇰🇷|韩国|韓|首尔|\b(?:KR|Korea)\d*\b/i, tolerance: 50, noncn: true },
+    { code: "SG", label: "🇸🇬 新加坡", pattern: /🇸🇬|新加坡|狮|獅|\b(?:SG|Singapore)\d*\b/i, tolerance: 50, noncn: true },
+    { code: "US", label: "🇺🇸 美国", pattern: /🇺🇸|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|\b(?:US|United States)\d*\b/i, tolerance: 150, noncn: true },
   ];
   const informationNodePatterns = [
     /剩余流量|已用流量|套餐到期|到期时间|过期时间|下次重置/i,
