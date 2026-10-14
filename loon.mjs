@@ -1,14 +1,14 @@
 // Writes rules/*.list in a form Loon reads: each GEOSITE line becomes the
 // domains of that category's classical list from MetaCubeX/meta-rules-dat.
 //
-// Usage: node scripts/loon.mjs <out-dir> [<category-dir>]
+// Usage: node loon.mjs <out-dir> [<category-dir>]
 // With <category-dir>, categories are read from <category>.list files there
 // instead of being downloaded.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const rulesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "rules");
+const rulesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "rules");
 const categoryUrl = (category) =>
   `https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/classical/${encodeURIComponent(category).replaceAll("!", "%21")}.list`;
 // Domain rules Loon supports. Categories may also hold DOMAIN-REGEX, which Loon
@@ -17,7 +17,7 @@ const loonTypes = new Set(["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD"]);
 const droppedCategoryTypes = new Set(["DOMAIN-REGEX"]);
 
 const [outDir, categoryDir] = process.argv.slice(2);
-if (!outDir) throw new Error("usage: node scripts/loon.mjs <out-dir> [<category-dir>]");
+if (!outDir) throw new Error("usage: node loon.mjs <out-dir> [<category-dir>]");
 
 const loadCategory = async (category) => {
   if (categoryDir) return readFileSync(path.join(categoryDir, `${category}.list`), "utf8");
@@ -53,7 +53,7 @@ const expand = async (file) => {
       lines.push(...domainRules(line, `rules/${file}`));
     }
   }
-  return `# Generated from rules/${file} by scripts/loon.mjs.\n${lines.join("\n").trimEnd()}\n`;
+  return `# Generated from rules/${file} by loon.mjs.\n${lines.join("\n").trimEnd()}\n`;
 };
 
 // Expand everything before writing anything, so a failed expansion writes nothing.

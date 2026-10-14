@@ -5,7 +5,7 @@ name: Loon lists
 on:
   push:
     branches: [main]
-    paths: [rules/**, scripts/loon.mjs, .github/workflows/loon.yml]
+    paths: [rules/**, loon.mjs, .github/workflows/loon.yml]
   schedule:
     - cron: "37 4 * * *"
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Expand the lists
-        run: node scripts/loon.mjs "$RUNNER_TEMP/loon"
+        run: node loon.mjs "$RUNNER_TEMP/loon"
       - name: Publish when changed
         working-directory: ${{ runner.temp }}/loon
         env:
