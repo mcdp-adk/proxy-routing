@@ -1,7 +1,8 @@
-// Writes rules/*.list in a form Loon reads: each GEOSITE line becomes the
-// domains of that category's classical list from MetaCubeX/meta-rules-dat.
+// Writes rules/*.list in a portable form that clients without GEOSITE (Loon,
+// Surge, Shadowrocket, Stash) read: each GEOSITE line becomes the domains of
+// that category's classical list from MetaCubeX/meta-rules-dat.
 //
-// Usage: node loon.mjs <out-dir> [<category-dir>]
+// Usage: node portable.mjs <out-dir> [<category-dir>]
 // With <category-dir>, categories are read from <category>.list files there
 // instead of being downloaded.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -11,13 +12,13 @@ import { fileURLToPath } from "node:url";
 const rulesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "rules");
 const categoryUrl = (category) =>
   `https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/classical/${encodeURIComponent(category).replaceAll("!", "%21")}.list`;
-// Domain rules Loon supports. Categories may also hold DOMAIN-REGEX, which Loon
-// lacks; those lines are dropped from categories, and rejected anywhere else.
-const loonTypes = new Set(["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD"]);
+// Domain rules all those clients read. Categories may also hold DOMAIN-REGEX,
+// which Loon lacks; those lines are dropped from categories, and rejected anywhere else.
+const portableTypes = new Set(["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD"]);
 const droppedCategoryTypes = new Set(["DOMAIN-REGEX"]);
 
 const [outDir, categoryDir] = process.argv.slice(2);
-if (!outDir) throw new Error("usage: node loon.mjs <out-dir> [<category-dir>]");
+if (!outDir) throw new Error("usage: node portable.mjs <out-dir> [<category-dir>]");
 
 const loadCategory = async (category) => {
   if (categoryDir) return readFileSync(path.join(categoryDir, `${category}.list`), "utf8");
@@ -33,8 +34,8 @@ const domainRules = (text, source, droppedTypes = new Set()) =>
     .filter((line) => {
       const [type, value, ...rest] = line.split(",");
       if (droppedTypes.has(type)) return false;
-      if (!loonTypes.has(type) || !value || rest.length > 0) {
-        throw new Error(`${source}: Loon cannot use "${line}"`);
+      if (!portableTypes.has(type) || !value || rest.length > 0) {
+        throw new Error(`${source}: not portable: "${line}"`);
       }
       return true;
     });
@@ -53,7 +54,7 @@ const expand = async (file) => {
       lines.push(...domainRules(line, `rules/${file}`));
     }
   }
-  return `# Generated from rules/${file} by loon.mjs.\n${lines.join("\n").trimEnd()}\n`;
+  return `# Generated from rules/${file} by portable.mjs.\n${lines.join("\n").trimEnd()}\n`;
 };
 
 // Expand everything before writing anything, so a failed expansion writes nothing.

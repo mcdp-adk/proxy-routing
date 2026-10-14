@@ -1,11 +1,11 @@
-# Publishes rules/*.list for Loon on the loon branch: one commit, replaced
+# Publishes rules/*.list in portable form on the portable branch: one commit, replaced
 # whenever the expanded lists change.
-name: Loon lists
+name: Portable lists
 
 on:
   push:
     branches: [main]
-    paths: [rules/**, loon.mjs, .github/workflows/loon.yml]
+    paths: [rules/**, portable.mjs, .github/workflows/portable.yml]
   schedule:
     - cron: "37 4 * * *"
   workflow_dispatch:
@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: loon
+  group: portable
 
 jobs:
   publish:
@@ -22,20 +22,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Expand the lists
-        run: node loon.mjs "$RUNNER_TEMP/loon"
+        run: node portable.mjs "$RUNNER_TEMP/portable"
       - name: Publish when changed
-        working-directory: ${{ runner.temp }}/loon
+        working-directory: ${{ runner.temp }}/portable
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git init -q -b loon
+          git init -q -b portable
           git add -A
           git -c user.name="github-actions[bot]" \
             -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "chore: publish Loon lists for ${GITHUB_SHA::7}"
-          if git fetch -q "$remote" loon 2>/dev/null && git diff --quiet FETCH_HEAD HEAD; then
+            commit -q -m "chore: publish portable lists for ${GITHUB_SHA::7}"
+          if git fetch -q "$remote" portable 2>/dev/null && git diff --quiet FETCH_HEAD HEAD; then
             echo "Lists unchanged."
           else
-            git push -q --force "$remote" HEAD:loon
+            git push -q --force "$remote" HEAD:portable
           fi

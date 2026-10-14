@@ -6,7 +6,7 @@ Personal routing for FlClash and Loon on top of airport subscriptions. It regrou
 
 - `rules/`: one list per exit, shared by both clients. Each list names MetaCubeX geosite categories where one exists and lists domains by hand where none does.
 - `flclash.js`: the FlClash override script. It builds the region groups and matches `rules/` ahead of the geosite and GeoIP fallbacks.
-- `loon.mjs`: expands `rules/` into lists Loon can read. `.github/workflows/loon.yml` runs it on every push that changes `rules/` and daily, and publishes the result to the `loon` branch.
+- `portable.mjs`: expands `rules/` into plain `DOMAIN`, `DOMAIN-SUFFIX` and `DOMAIN-KEYWORD` lists, which Loon, Surge, Shadowrocket, Stash and mihomo read as they are; Quantumult X, sing-box and Egern need a converter. `.github/workflows/portable.yml` runs it on every push that changes `rules/` and daily, and publishes the result to the `portable` branch.
 
 ## Exits
 
@@ -21,7 +21,7 @@ Lists match in this order; the first list that claims a domain decides its exit.
 | `noncn` | 🌏 非中国区 | `NonCN` |
 | `proxy` | 🎯 节点选择 | `Proxy` |
 
-FlClash reads `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/<list>.list`; Loon subscribes to `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/loon/<list>.list` in the order above.
+FlClash reads `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/main/rules/<list>.list`; Loon subscribes to `https://raw.githubusercontent.com/mcdp-adk/proxy-routing/portable/<list>.list` in the order above.
 
 ## Changing routing
 
