@@ -1,0 +1,41 @@
+# Publishes rules/*.list for Loon on the loon branch: one commit, replaced
+# whenever the expanded lists change.
+name: Loon lists
+
+on:
+  push:
+    branches: [main]
+    paths: [rules/**, scripts/loon.mjs, .github/workflows/loon.yml]
+  schedule:
+    - cron: "37 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loon
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Expand the lists
+        run: node scripts/loon.mjs "$RUNNER_TEMP/loon"
+      - name: Publish when changed
+        working-directory: ${{ runner.temp }}/loon
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git init -q -b loon
+          git add -A
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "chore: publish Loon lists for ${GITHUB_SHA::7}"
+          if git fetch -q "$remote" loon 2>/dev/null && git diff --quiet FETCH_HEAD HEAD; then
+            echo "Lists unchanged."
+          else
+            git push -q --force "$remote" HEAD:loon
+          fi
