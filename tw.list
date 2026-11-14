@@ -1,0 +1,7 @@
+# Generated from rules/tw.list by portable.mjs.
+# Locked to Taiwan.
+DOMAIN,gamer2-cds.cdn.hinet.net
+DOMAIN,gamer-cds.cdn.hinet.net
+DOMAIN-SUFFIX,bahamut.akamaized.net
+DOMAIN-SUFFIX,bahamut.com.tw
+DOMAIN-SUFFIX,gamer.com.tw
