@@ -1,0 +1,37 @@
+# Generated from rules/jp.list by portable.mjs.
+# Locked to Japan.
+
+# DMM
+DOMAIN,api-p.videomarket.jp
+DOMAIN-SUFFIX,dmm.com
+DOMAIN-SUFFIX,dmm-extension.com
+DOMAIN-SUFFIX,dmmapis.com
+DOMAIN-SUFFIX,dmmrex.com
+DOMAIN-SUFFIX,dmm.co.jp
+DOMAIN-SUFFIX,ad.games.dmm.com
+DOMAIN-SUFFIX,bluekai.com
+DOMAIN-SUFFIX,fout.jp
+DOMAIN-SUFFIX,gmossp-sp.jp
+DOMAIN-SUFFIX,i-mobile.co.jp
+DOMAIN-SUFFIX,im-apps.net
+DOMAIN-SUFFIX,impact-ad.jp
+DOMAIN-SUFFIX,ladsp.com
+DOMAIN-SUFFIX,microad.co.jp
+DOMAIN-SUFFIX,microad.jp
+DOMAIN-SUFFIX,socdm.com
+DOMAIN-SUFFIX,fanza.jp
+
+# DLsite and the sites sharing its login, payment or media
+DOMAIN-SUFFIX,chobit.cc
+DOMAIN-SUFFIX,ci-en.jp
+DOMAIN-SUFFIX,ci-en.net
+DOMAIN-SUFFIX,dlaf.jp
+DOMAIN-SUFFIX,dlsite.com
+DOMAIN-SUFFIX,dlsite.jp
+DOMAIN-SUFFIX,dlsitestudio.com
+DOMAIN-SUFFIX,nijiyome.jp
+DOMAIN-SUFFIX,triokini.com
+DOMAIN-SUFFIX,dlsite.com.tw
+DOMAIN-SUFFIX,comipo.app
+DOMAIN-SUFFIX,vivion.jp
+DOMAIN-SUFFIX,vivion-bcs.com
